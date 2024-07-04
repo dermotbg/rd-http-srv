@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 
@@ -10,6 +11,7 @@ namespace Dermotbg.WebServer
   public static class Server
   {
     private static HttpListener? listener;
+    private static Router router = new Router();
     private static List<IPAddress> GetLocalHostIPs()
     {
       IPHostEntry host;
@@ -62,6 +64,13 @@ namespace Dermotbg.WebServer
       // release semaphore so that another listener can be started
       sem.Release();
       Log(context.Request);
+      HttpListenerRequest request = context.Request;
+      string path = request.RawUrl.LeftOf('?'); // path ONLY hence "LEFTOF"
+      string verb = request.HttpMethod; //Req type
+      string parms = request.RawUrl.RightOf('?'); //params of url 
+      Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
+      router.Route(verb, path, kvParams);
+
       string response = "Hello Browser!";
       byte[] encoded = Encoding.UTF8.GetBytes(response);
       context.Response.ContentLength64 = encoded.Length;
