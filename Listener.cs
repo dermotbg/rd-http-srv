@@ -3,6 +3,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
+using Dermotbg.Helpers;
+
 namespace Dermotbg.WebServer
 {
   public static class Server
@@ -32,6 +34,7 @@ namespace Dermotbg.WebServer
     // Being listening to connections on a separate worker thread
     private static void Start(HttpListener listener)
     {
+      // no need to try catch here when sudo ran 
       try
       {
         listener.Start();
@@ -58,6 +61,7 @@ namespace Dermotbg.WebServer
       HttpListenerContext context = await listener.GetContextAsync();
       // release semaphore so that another listener can be started
       sem.Release();
+      Log(context.Request);
       string response = "Hello Browser!";
       byte[] encoded = Encoding.UTF8.GetBytes(response);
       context.Response.ContentLength64 = encoded.Length;
@@ -70,6 +74,11 @@ namespace Dermotbg.WebServer
       List<IPAddress> localhostIPs = GetLocalHostIPs();
       listener = InitializeListener(localhostIPs);
       Start(listener);
+    }
+    //Logger
+    public static void Log(HttpListenerRequest request)
+    {
+      Console.WriteLine(request.RemoteEndPoint + " " + request.HttpMethod + " /" + request?.Url?.AbsoluteUri.RightOfN('/', 3));
     }
   }
 }
