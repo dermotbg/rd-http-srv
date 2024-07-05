@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Xml;
 
 namespace Dermotbg.Helpers;
 
@@ -11,11 +12,23 @@ public static class StringHelpers
     if (idx != -1) ret = input.Substring(0, idx);
     return ret;
   }
-    public static String RightOf(this string input, char c)
+  public static String RightOf(this string input, char c)
   {
     string ret = input;
     int idx = input.IndexOf(c);
     if (idx != -1) ret = input.Substring(idx + 1);
+    return ret;
+  }
+
+  public static string RightOf(this String src, string substr)
+  {
+    string ret = String.Empty;
+    int idx = src.IndexOf(substr);
+
+    if (idx != -1)
+    {
+      ret = src.Substring(idx + substr.Length);
+    }
     return ret;
   }
 
@@ -58,9 +71,9 @@ public static class StringHelpers
 
 public static class DictHelpers
 {
-  public static Dictionary<string, object> GetKeyValues(string data, Dictionary<string, object>? kv = null)
+  public static Dictionary<string, string> GetKeyValues(string data, Dictionary<string, string>? kv = null)
   {
-    if (kv == null) kv = new Dictionary<string, object>();
+    if (kv == null) kv = new Dictionary<string, string>();
     data.If(d => d.Length > 0, (d) => d.Split('&').ForEach(KeyValue => kv[KeyValue.LeftOf('=')] = System.Uri.UnescapeDataString(KeyValue.RightOf('='))));
     return kv;
   }

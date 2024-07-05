@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -8,7 +9,7 @@ using Dermotbg.Helpers;
 
 namespace Dermotbg.WebServer
 {
-  public static class Server
+  public class Server
   {
     private static HttpListener? listener;
     private static Router router = new Router();
@@ -68,18 +69,27 @@ namespace Dermotbg.WebServer
       string path = request.RawUrl.LeftOf('?'); // path ONLY hence "LEFTOF"
       string verb = request.HttpMethod; //Req type
       string parms = request.RawUrl.RightOf('?'); //params of url 
-      Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
-      router.Route(verb, path, kvParams);
+      Dictionary<string, string> kvParams = DictHelpers.GetKeyValues(parms);
+      Router.ResponsePacket resp = router.Route(verb, path, kvParams);
+      if(resp != null)
+      {
+        Respond(context.Response, resp);
+      }
 
-      string response = "Hello Browser!";
-      byte[] encoded = Encoding.UTF8.GetBytes(response);
-      context.Response.ContentLength64 = encoded.Length;
-      context.Response.OutputStream.Write(encoded, 0, encoded.Length);
-      context.Response.OutputStream.Close();
+    }
+    private static void Respond(HttpListenerResponse response, Router.ResponsePacket resp)
+    {
+      response.ContentType = resp.ContentType;
+      response.ContentLength64 = resp.Data.Length;
+      response.OutputStream.Write(resp.Data, 0, resp.Data.Length);
+      response.ContentEncoding = resp.Encoding;
+      response.StatusCode = (int)HttpStatusCode.OK;
+      response.OutputStream.Close();
     }
     //start the server
-    public static void Start()
+    public static void Start(string websitePath)
     {
+      router.WebsitePath = websitePath;
       List<IPAddress> localhostIPs = GetLocalHostIPs();
       listener = InitializeListener(localhostIPs);
       Start(listener);
