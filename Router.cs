@@ -9,14 +9,18 @@ namespace Dermotbg.WebServer
 {
   public class Router
   {
+    public const string POST = "post";
+		public const string GET = "get";
+		public const string PUT = "put";
+		public const string DELETE = "delete";
     public string WebsitePath { get; set; } = null!;
     private Dictionary<string, ExtensionInfo> extFolderMap;
     public class ResponsePacket
     {
-      public string Redirect { get; set; } = null!;
-      public byte[] Data { get; set; } = null!;
-      public string ContentType { get; set; } = null!;
-      public Encoding Encoding { get; set; } = null!;
+      public string Redirect { get; set; }
+      public byte[] Data { get; set; }      
+      public string ContentType { get; set; }
+      public Encoding Encoding { get; set; }
     }
     internal class ExtensionInfo
     {
@@ -51,54 +55,49 @@ namespace Dermotbg.WebServer
     // FileLoader reads in a (basically) text file and returns a ResponsePacket with the text UTF8 encoded
     private ResponsePacket FileLoader(string fullPath, string ext, ExtensionInfo extInfo)
     {
+      Console.WriteLine($"fullpath pre: {fullPath}");
       string text = File.ReadAllText(fullPath);
+      Console.WriteLine($"text?: {text}");
       ResponsePacket ret = new ResponsePacket() { Data = Encoding.UTF8.GetBytes(text), ContentType = extInfo.ContentType, Encoding = Encoding.UTF8 };
       return ret;
     }
     //  Loader for HTML files, taking into account missing extensions and file-less ips/domains, which should default to index.html
     private ResponsePacket PageLoader(string fullPath, string ext, ExtensionInfo extInfo)
     {
-      Console.WriteLine($"fullpath pre: {fullPath}");
-      ResponsePacket ret = new ResponsePacket();
+      ResponsePacket ret;
+      Console.WriteLine($"full: {fullPath} ---- websitepath: {WebsitePath}");
+      Console.WriteLine($"ext: {ext}");
       if (fullPath == WebsitePath)
       {
-        ret = Route("GET", "/index.html", null);
+        ret = Route(GET, "/index.html", null);
       }
       else
       {
-        if (String.IsNullOrEmpty(ext))
+        if (string.IsNullOrEmpty(ext))
         {
           // add the extension ".html" if it is null
           fullPath = fullPath + ".html";
         }
         // Inject "Pages" folder into the path
-        fullPath = WebsitePath + "/Pages" + fullPath.RightOf(WebsitePath);
-        Console.WriteLine($"fullpath post: {fullPath}");
-
+        fullPath = WebsitePath + "/Pages" + fullPath;
         ret = FileLoader(fullPath, ext, extInfo);
       }
       return ret;
     }
-    public ResponsePacket Route(string verb, string path, Dictionary<string, string> kvParams)
+    public ResponsePacket Route(string verb, string path, Dictionary<string, object> kvParams)
     {
-      string ext = path.RightOf('.');
+      // Console.WriteLine($"PATH: {path}");
+      string ext = path.RightOf('.');    
       ExtensionInfo extInfo;
       ResponsePacket ret = null;
       if ( extFolderMap.TryGetValue(ext, out extInfo))
       {
         //  strip leading "/" <-- possibly problematic but lets see
         string fullPath = Path.Combine(WebsitePath, path);
-        Console.WriteLine(fullPath);
+        // Console.WriteLine($"WE ARE INSIDE THE IF STATEMENT fullPath: {fullPath}");
         ret = extInfo.Loader(fullPath, ext, extInfo);
       }
       return ret;
-    }
-    public static string GetWebsitePath()
-    {
-      string websitepath = Assembly.GetExecutingAssembly().Location;
-      Console.WriteLine("websitePath");
-      Console.WriteLine(websitepath);
-      return websitepath;
     }
   }
 }

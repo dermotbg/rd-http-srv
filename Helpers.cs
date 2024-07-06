@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Xml;
 
@@ -5,11 +6,46 @@ namespace Dermotbg.Helpers;
 
 public static class StringHelpers 
 {
-  public static String LeftOf(this string input, char c)
+  public static string LeftOf(this String src, char c)
+  {
+    return StringHelpers.LeftOf(src, c);
+  }
+  public static string LeftOf(this string input, string s)
   {
     string ret = input;
-    int idx = input.IndexOf(c);
+    if(input == null) ret = "";
+    int idx = input.IndexOf(s);
     if (idx != -1) ret = input.Substring(0, idx);
+    return ret;
+  }
+  public static string LeftOfRightmostOf(string src, char c)
+  {
+    string ret = src;
+    int idx = src.LastIndexOf(c);
+
+    if (idx != -1)
+    {
+      ret = src.Substring(0, idx);
+    }
+    return ret;
+  }
+  public static string LeftOfRightmostOf(this String src, string s)
+  {
+    string ret = src;
+    int idx = src.IndexOf(s);
+    int idx2 = idx;
+    while (idx2 != -1)
+    {
+      idx2 = src.IndexOf(s, idx + s.Length);
+      if (idx2 != -1)
+      {
+        idx = idx2;
+      }
+    }
+    if (idx != -1)
+    {
+      ret = src.Substring(0, idx);
+    }
     return ret;
   }
   public static String RightOf(this string input, char c)
@@ -71,11 +107,18 @@ public static class StringHelpers
 
 public static class DictHelpers
 {
-  public static Dictionary<string, string> GetKeyValues(string data, Dictionary<string, string>? kv = null)
+  public static Dictionary<string, object> GetKeyValues(string data, Dictionary<string, object>? kv = null)
   {
-    if (kv == null) kv = new Dictionary<string, string>();
+    if (kv == null) kv = new Dictionary<string, object>();
     data.If(d => d.Length > 0, (d) => d.Split('&').ForEach(KeyValue => kv[KeyValue.LeftOf('=')] = System.Uri.UnescapeDataString(KeyValue.RightOf('='))));
     return kv;
+  }
+  public static void DictLogger(Dictionary<string, object> obj)
+  {
+    foreach (KeyValuePair<string, object> kvp in obj)
+    {
+      Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+    }
   }
 }
 

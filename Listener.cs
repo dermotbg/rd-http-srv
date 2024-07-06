@@ -66,25 +66,28 @@ namespace Dermotbg.WebServer
       sem.Release();
       Log(context.Request);
       HttpListenerRequest request = context.Request;
-      string path = request.RawUrl.LeftOf('?'); // path ONLY hence "LEFTOF"
+      string path = request.RawUrl.LeftOf("?"); // path ONLY hence "LEFTOF"
       string verb = request.HttpMethod; //Req type
-      string parms = request.RawUrl.RightOf('?'); //params of url 
-      Dictionary<string, string> kvParams = DictHelpers.GetKeyValues(parms);
+      string parms = request.RawUrl.RightOf("?"); //params of url 
+      Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
+      DictHelpers.DictLogger(kvParams);
       Router.ResponsePacket resp = router.Route(verb, path, kvParams);
-      if(resp != null)
-      {
-        Respond(context.Response, resp);
-      }
-
+      Respond(context.Response, resp);
     }
     private static void Respond(HttpListenerResponse response, Router.ResponsePacket resp)
     {
-      response.ContentType = resp.ContentType;
-      response.ContentLength64 = resp.Data.Length;
-      response.OutputStream.Write(resp.Data, 0, resp.Data.Length);
-      response.ContentEncoding = resp.Encoding;
-      response.StatusCode = (int)HttpStatusCode.OK;
-      response.OutputStream.Close();
+      if(resp != null)
+      {
+        response.ContentType = resp.ContentType;
+        response.ContentLength64 = resp.Data.Length;
+        response.OutputStream.Write(resp.Data, 0, resp.Data.Length);
+        response.ContentEncoding = resp.Encoding;
+        response.StatusCode = (int)HttpStatusCode.OK;
+        response.OutputStream.Close();
+      }
+      else{
+        Console.WriteLine("resp is null");
+      }
     }
     //start the server
     public static void Start(string websitePath)
