@@ -55,47 +55,55 @@ namespace Dermotbg.WebServer
     // FileLoader reads in a (basically) text file and returns a ResponsePacket with the text UTF8 encoded
     private ResponsePacket FileLoader(string fullPath, string ext, ExtensionInfo extInfo)
     {
-      Console.WriteLine($"fullpath pre: {fullPath}");
+      Console.WriteLine($"FileLoader fullpath pre: {fullPath}");
       string text = File.ReadAllText(fullPath);
-      Console.WriteLine($"text?: {text}");
       ResponsePacket ret = new ResponsePacket() { Data = Encoding.UTF8.GetBytes(text), ContentType = extInfo.ContentType, Encoding = Encoding.UTF8 };
       return ret;
     }
     //  Loader for HTML files, taking into account missing extensions and file-less ips/domains, which should default to index.html
-    private ResponsePacket PageLoader(string fullPath, string ext, ExtensionInfo extInfo)
+    private ResponsePacket PageLoader(string relativePath, string ext, ExtensionInfo extInfo)
     {
+      string fullPath = Path.Combine(WebsitePath, relativePath.TrimStart('/'));
+      
       ResponsePacket ret;
-      Console.WriteLine($"full: {fullPath} ---- websitepath: {WebsitePath}");
-      Console.WriteLine($"ext: {ext}");
-      if (fullPath == WebsitePath)
+      Console.WriteLine($"full: {fullPath} ---- websitepath: {WebsitePath} ----- ext: {ext}");
+      if (Path.Combine(WebsitePath, relativePath.TrimStart('/')) == WebsitePath)
       {
+        Console.WriteLine("WE HERE");
         ret = Route(GET, "/index.html", null);
+        Console.WriteLine("NOT HERE");
       }
       else
       {
         if (string.IsNullOrEmpty(ext))
         {
           // add the extension ".html" if it is null
+          Console.WriteLine($"EXT INSIDE ISNULLOFEMPTY{ext}");
           fullPath = fullPath + ".html";
+          Console.WriteLine($"fullPath INSIDE ISNULLOFEMPTY{fullPath}");
         }
         // Inject "Pages" folder into the path
-        fullPath = WebsitePath + "/Pages" + fullPath;
+        fullPath = WebsitePath + "/Pages" + fullPath.RightOf(WebsitePath);
+        Console.WriteLine($"fullPath END OF PAGELOADER{fullPath}");
         ret = FileLoader(fullPath, ext, extInfo);
       }
       return ret;
     }
-    public ResponsePacket Route(string verb, string path, Dictionary<string, object> kvParams)
+    public ResponsePacket Route(string verb, string path, Dictionary<string, object>? kvParams)
     {
-      // Console.WriteLine($"PATH: {path}");
-      string ext = path.RightOf('.');    
+      string ext = Path.GetExtension(path);
+      Console.WriteLine($"EXT INSIDE ROUTE{ext}");
+      if(ext.Contains('.'))
+      {
+        ext = path.RightOf('.');
+      }
       ExtensionInfo extInfo;
       ResponsePacket ret = null;
-      if ( extFolderMap.TryGetValue(ext, out extInfo))
+      if(extFolderMap.TryGetValue(ext, out extInfo))
       {
-        //  strip leading "/" <-- possibly problematic but lets see
-        string fullPath = Path.Combine(WebsitePath, path);
-        // Console.WriteLine($"WE ARE INSIDE THE IF STATEMENT fullPath: {fullPath}");
-        ret = extInfo.Loader(fullPath, ext, extInfo);
+        string fullPath = Path.Combine(WebsitePath, path.TrimStart('/'));
+        Console.WriteLine($"INSIDE IF STATEMENT{Path.Combine(WebsitePath, path)}");
+        ret = extInfo.Loader(Path.Combine(WebsitePath, path), ext, extInfo);
       }
       return ret;
     }
