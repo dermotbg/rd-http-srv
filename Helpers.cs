@@ -82,6 +82,16 @@ public static class StringHelpers
     if (idx != -1) ret = input.Substring(idx + 1);
     return ret;
   }
+  public static string RightOfRightmostOf(this string src, char c)
+{
+  string ret=String.Empty;
+  int idx=src.LastIndexOf(c);
+  if (idx != -1)
+  {
+    ret=src.Substring(idx+1);
+  }
+  return ret;
+}
   public static String[] Split(this string source, char delimeter, char quoteChar)
   {
     List<string> retArray = new List<string>();

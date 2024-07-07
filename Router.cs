@@ -45,6 +45,10 @@ namespace Dermotbg.WebServer
     // ImageLoader Reads in an image file and returns a ResponsePacket with the raw data.
     private ResponsePacket ImageLoader (string fullPath, string ext, ExtensionInfo extInfo)
     {
+      if(!fullPath.Contains(WebsitePath))
+      {
+        fullPath = WebsitePath + fullPath;
+      }
       FileStream fStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
       BinaryReader br = new BinaryReader(fStream);
       ResponsePacket ret = new ResponsePacket() { Data = br.ReadBytes((int)fStream.Length), ContentType = extInfo.ContentType };
@@ -55,7 +59,10 @@ namespace Dermotbg.WebServer
     // FileLoader reads in a (basically) text file and returns a ResponsePacket with the text UTF8 encoded
     private ResponsePacket FileLoader(string fullPath, string ext, ExtensionInfo extInfo)
     {
-      Console.WriteLine($"FileLoader fullpath pre: {fullPath}");
+      if(!fullPath.Contains(WebsitePath))
+      {
+        fullPath = WebsitePath + fullPath;
+      }
       string text = File.ReadAllText(fullPath);
       ResponsePacket ret = new ResponsePacket() { Data = Encoding.UTF8.GetBytes(text), ContentType = extInfo.ContentType, Encoding = Encoding.UTF8 };
       return ret;
@@ -66,25 +73,19 @@ namespace Dermotbg.WebServer
       string fullPath = Path.Combine(WebsitePath, relativePath.TrimStart('/'));
       
       ResponsePacket ret;
-      Console.WriteLine($"full: {fullPath} ---- websitepath: {WebsitePath} ----- ext: {ext}");
       if (Path.Combine(WebsitePath, relativePath.TrimStart('/')) == WebsitePath)
       {
-        Console.WriteLine("WE HERE");
         ret = Route(GET, "/index.html", null);
-        Console.WriteLine("NOT HERE");
       }
       else
       {
         if (string.IsNullOrEmpty(ext))
         {
           // add the extension ".html" if it is null
-          Console.WriteLine($"EXT INSIDE ISNULLOFEMPTY{ext}");
           fullPath = fullPath + ".html";
-          Console.WriteLine($"fullPath INSIDE ISNULLOFEMPTY{fullPath}");
         }
         // Inject "Pages" folder into the path
         fullPath = WebsitePath + "/Pages" + fullPath.RightOf(WebsitePath);
-        Console.WriteLine($"fullPath END OF PAGELOADER{fullPath}");
         ret = FileLoader(fullPath, ext, extInfo);
       }
       return ret;
@@ -92,18 +93,16 @@ namespace Dermotbg.WebServer
     public ResponsePacket Route(string verb, string path, Dictionary<string, object>? kvParams)
     {
       string ext = Path.GetExtension(path);
-      Console.WriteLine($"EXT INSIDE ROUTE{ext}");
       if(ext.Contains('.'))
       {
-        ext = path.RightOf('.');
+        ext = path.RightOfRightmostOf('.');
       }
       ExtensionInfo extInfo;
       ResponsePacket ret = null;
       if(extFolderMap.TryGetValue(ext, out extInfo))
       {
-        string fullPath = Path.Combine(WebsitePath, path.TrimStart('/'));
-        Console.WriteLine($"INSIDE IF STATEMENT{Path.Combine(WebsitePath, path)}");
-        ret = extInfo.Loader(Path.Combine(WebsitePath, path), ext, extInfo);
+        string fullPath = Path.Combine(WebsitePath, path);
+        ret = extInfo.Loader(fullPath, ext, extInfo);
       }
       return ret;
     }

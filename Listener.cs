@@ -76,18 +76,12 @@ namespace Dermotbg.WebServer
     }
     private static void Respond(HttpListenerResponse response, Router.ResponsePacket resp)
     {
-      // if(resp != null)
-      // {
         response.ContentType = resp.ContentType;
         response.ContentLength64 = resp.Data.Length;
         response.OutputStream.Write(resp.Data, 0, resp.Data.Length);
         response.ContentEncoding = resp.Encoding;
         response.StatusCode = (int)HttpStatusCode.OK;
         response.OutputStream.Close();
-      // }
-      // // else{
-      //   Console.WriteLine("resp is null");
-      // }
     }
     //start the server
     public static void Start(string websitePath)
