@@ -7,6 +7,17 @@ namespace Dermotbg.WebServer
 {
   public class Server
   {
+        public enum ServerError
+    {
+      OK,
+      ExpiredSession,
+      NotAuthorized,
+      FileNotFound, 
+      PageNotFound,
+      ServerError,
+      UnknownType,
+    }
+    public static Func<ServerError, string> OnError { get; set; }
     private static HttpListener? listener;
     private static Router router = new Router();
     private static List<IPAddress> GetLocalHostIPs()
@@ -30,6 +41,8 @@ namespace Dermotbg.WebServer
     }
     private static int maxSimultaneousConnections = 20;
     private static Semaphore sem = new Semaphore(maxSimultaneousConnections, maxSimultaneousConnections);
+
+
     // Being listening to connections on a separate worker thread
     private static void Start(HttpListener listener)
     {
@@ -68,6 +81,10 @@ namespace Dermotbg.WebServer
       Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
       DictHelpers.DictLogger(kvParams);
       Router.ResponsePacket resp = router.Route(verb, path, kvParams);
+      if(resp.Error != ServerError.OK)
+      {
+        resp = router.Route("get", OnError(resp.Error), null);
+      }
       Respond(context.Response, resp);
     }
     private static void Respond(HttpListenerResponse response, Router.ResponsePacket resp)

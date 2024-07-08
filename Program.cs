@@ -1,7 +1,5 @@
 ﻿using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using Dermotbg.Helpers;
-using Dermotbg.WebServer;
 
 namespace Dermotbg.WebServer
 {
@@ -10,6 +8,7 @@ namespace Dermotbg.WebServer
     static void Main(string[] args)
     {
       string websitePath = GetWebsitePath();
+      Server.OnError = ErrorHandler;
       Server.Start(websitePath);
       Console.ReadLine();
     }
@@ -20,6 +19,32 @@ namespace Dermotbg.WebServer
       websitePath = websitePath.LeftOfRightmostOf("/").LeftOfRightmostOf("/").LeftOfRightmostOf("/").LeftOfRightmostOf("/") + "/Website";
       Console.WriteLine($"websitePath: {websitePath}");
       return websitePath;
+    }
+    public static string ErrorHandler(Server.ServerError error)
+    {
+      string ret = null;
+      switch (error)
+      {
+        case Server.ServerError.ExpiredSession:
+          ret = "/ErrorPages/expiredSession.html";
+          break;
+        case Server.ServerError.FileNotFound:
+          ret = "/ErrorPages/fileNotFound.html";
+          break;
+        case Server.ServerError.NotAuthorized:
+          ret = "/ErrorPages/notAuthorized.html";
+          break;
+        case Server.ServerError.PageNotFound:
+          ret = "/ErrorPages/pageNotFound.html";
+          break;
+        case Server.ServerError.ServerError:
+          ret = "/ErrorPages/serverError.html";
+          break;
+        case Server.ServerError.UnknownType:
+          ret = "/ErrorPages/unknownType.html";
+          break;
+      }
+      return ret;
     }
   }
 }

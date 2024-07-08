@@ -17,6 +17,7 @@ namespace Dermotbg.WebServer
       public byte[] Data { get; set; }      
       public string ContentType { get; set; }
       public Encoding Encoding { get; set; }
+      public Server.ServerError Error { get; set; }
     }
     internal class ExtensionInfo
     {
@@ -99,6 +100,9 @@ namespace Dermotbg.WebServer
       {
         string fullPath = Path.Combine(WebsitePath, path);
         ret = extInfo.Loader(fullPath, ext, extInfo);
+      }
+      else{
+        ret = new ResponsePacket() { Error = Server.ServerError.UnknownType };
       }
       return ret;
     }
