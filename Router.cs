@@ -1,18 +1,14 @@
-using System.Net.Mime;
-using System.Reflection;
 using System.Text;
-using System.Xml;
 using Dermotbg.Helpers;
-using Dermotbg.WebServer;
 
 namespace Dermotbg.WebServer
 {
   public class Router
   {
     public const string POST = "post";
-		public const string GET = "get";
-		public const string PUT = "put";
-		public const string DELETE = "delete";
+    public const string GET = "get";
+    public const string PUT = "put";
+    public const string DELETE = "delete";
     public string WebsitePath { get; set; } = null!;
     private Dictionary<string, ExtensionInfo> extFolderMap;
     public class ResponsePacket
