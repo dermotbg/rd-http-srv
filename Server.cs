@@ -71,25 +71,40 @@ namespace Dermotbg.WebServer
     // await connections
     private async void StartConnectionListener(HttpListener listener)
     {
+      Router.ResponsePacket resp;
+
       // await for connection. Return to caller while waiting
       HttpListenerContext context = await listener.GetContextAsync();
+
       // release semaphore so that another listener can be started
       sem.Release();
       Log(context.Request);
+      
       HttpListenerRequest request = context.Request;
-      string path = request.RawUrl.LeftOf("?"); // path ONLY hence "LEFTOF"
-      string verb = request.HttpMethod; //Req type
-      string parms = request.RawUrl.RightOf("?"); //params of url 
-      Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
-      DictHelpers.DictLogger(kvParams);
-      Router.ResponsePacket resp = router.Route(verb, path, kvParams);
-      if(resp.Error != ServerError.OK)
+      try
       {
-        Console.WriteLine($"SERVER ERROR {resp.Error}");
-        resp.Redirect = OnError(resp.Error);
-        // resp = router.Route("get", OnError(resp.Error), null);
+        string path = request.RawUrl.LeftOf("?"); // path ONLY hence "LEFTOF"
+        string verb = request.HttpMethod; //Req type
+        string parms = request.RawUrl.RightOf("?"); //params of url 
+        // Add params to KV pairs
+        Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
+        
+        resp = router.Route(verb, path, kvParams);
+
+        if(resp.Error != ServerError.OK)
+        {
+          Console.WriteLine($"SERVER ERROR {resp.Error}");
+          resp.Redirect = OnError(resp.Error);
+          // resp = router.Route("get", OnError(resp.Error), null);
+        }
+        Respond(context.Request, context.Response, resp);
       }
-      Respond(context.Request, context.Response, resp);
+      catch (Exception ex)
+      {
+        Console.WriteLine(ex.Message);
+        Console.WriteLine(ex.StackTrace);
+        resp = new Router.ResponsePacket() { Redirect = OnError(ServerError.ServerError) };
+      }
     }
     private static void Respond(HttpListenerRequest request, HttpListenerResponse response, Router.ResponsePacket resp)
     {
