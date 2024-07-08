@@ -42,26 +42,43 @@ namespace Dermotbg.WebServer
     // ImageLoader Reads in an image file and returns a ResponsePacket with the raw data.
     private ResponsePacket ImageLoader (string fullPath, string ext, ExtensionInfo extInfo)
     {
+      ResponsePacket ret;
       if(!fullPath.Contains(WebsitePath))
       {
         fullPath = WebsitePath + fullPath;
       }
-      FileStream fStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
-      BinaryReader br = new BinaryReader(fStream);
-      ResponsePacket ret = new ResponsePacket() { Data = br.ReadBytes((int)fStream.Length), ContentType = extInfo.ContentType };
-      br.Close();
-      fStream.Close();
+       if (!File.Exists(fullPath))
+      {
+        ret = new ResponsePacket() { Error = Server.ServerError.FileNotFound };
+        Console.WriteLine($"File was not found: {fullPath}");
+      }
+      else
+      {
+        FileStream fStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+        BinaryReader br = new BinaryReader(fStream);
+        ret = new ResponsePacket() { Data = br.ReadBytes((int)fStream.Length), ContentType = extInfo.ContentType };
+        br.Close();
+        fStream.Close();
+      }
       return ret;
     }
     // FileLoader reads in a (basically) text file and returns a ResponsePacket with the text UTF8 encoded
     private ResponsePacket FileLoader(string fullPath, string ext, ExtensionInfo extInfo)
     {
+      ResponsePacket ret;
       if(!fullPath.Contains(WebsitePath))
       {
         fullPath = WebsitePath + fullPath;
       }
-      string text = File.ReadAllText(fullPath);
-      ResponsePacket ret = new ResponsePacket() { Data = Encoding.UTF8.GetBytes(text), ContentType = extInfo.ContentType, Encoding = Encoding.UTF8 };
+      if (!File.Exists(fullPath))
+      {
+        ret = new ResponsePacket() { Error = Server.ServerError.FileNotFound };
+        Console.WriteLine($"File was not found: {fullPath}");
+      }
+      else{
+        string text = File.ReadAllText(fullPath);
+        ret = new ResponsePacket() { Data = Encoding.UTF8.GetBytes(text), ContentType = extInfo.ContentType, Encoding = Encoding.UTF8 };
+      }
       return ret;
     }
     //  Loader for HTML files, taking into account missing extensions and file-less ips/domains, which should default to index.html
@@ -83,7 +100,14 @@ namespace Dermotbg.WebServer
         }
         // Inject "Pages" folder into the path
         fullPath = WebsitePath + "/Pages" + fullPath.RightOf(WebsitePath);
-        ret = FileLoader(fullPath, ext, extInfo);
+        if(!File.Exists(fullPath))
+        {
+          ret = new ResponsePacket() { Error = Server.ServerError.PageNotFound };
+        }
+        else
+        {
+          ret = FileLoader(fullPath, ext, extInfo);
+        }
       }
       return ret;
     }

@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using System.Net;
+using System.Net.Cache;
 using System.Net.Sockets;
 
 using Dermotbg.Helpers;
@@ -44,7 +46,7 @@ namespace Dermotbg.WebServer
 
 
     // Being listening to connections on a separate worker thread
-    private static void Start(HttpListener listener)
+    private void Start(HttpListener listener)
     {
       // no need to try catch here when sudo ran 
       try
@@ -58,7 +60,7 @@ namespace Dermotbg.WebServer
       }
     }
     // Start awaiting connections up to the "maxSimultaneous value.
-    private static void RunServer(HttpListener listener)
+    private void RunServer(HttpListener listener)
     {
       while(true)
       {
@@ -67,7 +69,7 @@ namespace Dermotbg.WebServer
       }
     }
     // await connections
-    private static async void StartConnectionListener(HttpListener listener)
+    private async void StartConnectionListener(HttpListener listener)
     {
       // await for connection. Return to caller while waiting
       HttpListenerContext context = await listener.GetContextAsync();
@@ -83,21 +85,31 @@ namespace Dermotbg.WebServer
       Router.ResponsePacket resp = router.Route(verb, path, kvParams);
       if(resp.Error != ServerError.OK)
       {
-        resp = router.Route("get", OnError(resp.Error), null);
+        Console.WriteLine($"SERVER ERROR {resp.Error}");
+        resp.Redirect = OnError(resp.Error);
+        // resp = router.Route("get", OnError(resp.Error), null);
       }
-      Respond(context.Response, resp);
+      Respond(context.Request, context.Response, resp);
     }
-    private static void Respond(HttpListenerResponse response, Router.ResponsePacket resp)
+    private static void Respond(HttpListenerRequest request, HttpListenerResponse response, Router.ResponsePacket resp)
     {
+      if (String.IsNullOrEmpty(resp.Redirect))
+      {
         response.ContentType = resp.ContentType;
         response.ContentLength64 = resp.Data.Length;
         response.OutputStream.Write(resp.Data, 0, resp.Data.Length);
         response.ContentEncoding = resp.Encoding;
         response.StatusCode = (int)HttpStatusCode.OK;
-        response.OutputStream.Close();
+      }
+      else
+      {
+        response.StatusCode = (int)HttpStatusCode.Redirect;
+        response.Redirect("http://" + request.UserHostAddress + resp.Redirect);
+      }
+      response.OutputStream.Close();
     }
     //start the server
-    public static void Start(string websitePath)
+    public void Start(string websitePath)
     {
       router.WebsitePath = websitePath;
       List<IPAddress> localhostIPs = GetLocalHostIPs();

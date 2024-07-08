@@ -5,11 +5,13 @@ namespace Dermotbg.WebServer
 {
   class Program
   {
+    public static Server server;
     static void Main(string[] args)
     {
       string websitePath = GetWebsitePath();
+      server = new Server();
       Server.OnError = ErrorHandler;
-      Server.Start(websitePath);
+      server.Start(websitePath);
       Console.ReadLine();
     }
     public static string GetWebsitePath()
