@@ -11,6 +11,7 @@ namespace Dermotbg.WebServer
       string websitePath = GetWebsitePath();
       server = new Server();
       Server.OnError = ErrorHandler;
+      server.AddRoute(new Route() { Verb = Router.POST, Path = "/demo/redirect", Action = RedirectMe });
       server.Start(websitePath);
       Console.ReadLine();
     }
@@ -21,6 +22,10 @@ namespace Dermotbg.WebServer
       websitePath = websitePath.LeftOfRightmostOf("/").LeftOfRightmostOf("/").LeftOfRightmostOf("/").LeftOfRightmostOf("/") + "/Website";
       Console.WriteLine($"websitePath: {websitePath}");
       return websitePath;
+    }
+    public static string RedirectMe(Dictionary<string, object> parms)
+    {
+      return "/demo/clicked";
     }
     public static string ErrorHandler(Server.ServerError error)
     {

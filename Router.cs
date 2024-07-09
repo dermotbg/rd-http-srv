@@ -34,6 +34,7 @@ namespace Dermotbg.WebServer
     
     public Router()
     {
+      routes = new List<Route>();
       extFolderMap = new Dictionary<string, ExtensionInfo>()
       {
         {"ico", new ExtensionInfo() {Loader=ImageLoader, ContentType="image/ico"}},
@@ -137,11 +138,11 @@ namespace Dermotbg.WebServer
       {
         string fullPath = Path.Combine(WebsitePath, path);
         ret = extInfo.Loader(fullPath, ext, extInfo);
-        Route route = routes.SingleOrDefault(route => verb == route.Verb.ToLower() && path == route.Path);
-        if (route != null)
+        Route routeHandler = routes.SingleOrDefault(route => verb == route.Verb.ToLower() && path == route.Path);
+        if (routeHandler != null)
         {
           // if route does not return null, it's confirmed there is a handler for this route
-          string redirect = route.Action(kvParams);
+          string redirect = routeHandler.Action(kvParams);
           if (String.IsNullOrEmpty(redirect))
           {
             //if there is no redirect we can respond with the default loader

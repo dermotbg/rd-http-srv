@@ -3,10 +3,6 @@ namespace Dermotbg.Helpers;
 
 public static class StringHelpers 
 {
-  public static string LeftOf(this String src, char c)
-  {
-    return StringHelpers.LeftOf(src, c);
-  }
   public static string LeftOf(this string input, string s)
   {
     string ret = input;
@@ -117,7 +113,7 @@ public static class DictHelpers
   public static Dictionary<string, object> GetKeyValues(string data, Dictionary<string, object>? kv = null)
   {
     if (kv == null) kv = new Dictionary<string, object>();
-    data.If(d => d.Length > 0, (d) => d.Split('&').ForEach(KeyValue => kv[KeyValue.LeftOf('=')] = System.Uri.UnescapeDataString(KeyValue.RightOf('='))));
+    data.If(d => d.Length > 0, (d) => d.Split('&').ForEach(keyValue => kv[keyValue.LeftOf("=")] = keyValue.RightOf('=')));
     return kv;
   }
   public static void DictLogger(Dictionary<string, object> obj)

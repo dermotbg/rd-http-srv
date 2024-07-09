@@ -43,7 +43,10 @@ namespace Dermotbg.WebServer
     }
     private static int maxSimultaneousConnections = 20;
     private static Semaphore sem = new Semaphore(maxSimultaneousConnections, maxSimultaneousConnections);
-
+    public void AddRoute (Route route)
+    {
+      router.AddRoute(route);
+    }
 
     // Being listening to connections on a separate worker thread
     private void Start(HttpListener listener)
@@ -88,6 +91,9 @@ namespace Dermotbg.WebServer
         string parms = request.RawUrl.RightOf("?"); //params of url 
         // Add params to KV pairs
         Dictionary<string, object> kvParams = DictHelpers.GetKeyValues(parms);
+        string data = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding).ReadToEnd();
+        DictHelpers.GetKeyValues(data, kvParams);
+        Log(kvParams);
         
         resp = router.Route(verb, path, kvParams);
 
@@ -132,9 +138,13 @@ namespace Dermotbg.WebServer
       Start(listener);
     }
     //Logger
-    public static void Log(HttpListenerRequest request)
+    private void Log(HttpListenerRequest request)
     {
       Console.WriteLine(request.RemoteEndPoint + " " + request.HttpMethod + " /" + request?.Url?.AbsoluteUri.RightOfN('/', 3));
+    }
+    private void Log(Dictionary<string, object> kv)
+    {
+      kv.ForEach(kvp => Console.WriteLine(kvp.Key + " : " + Uri.UnescapeDataString(kvp.Value.ToString())));
     }
   }
 }
