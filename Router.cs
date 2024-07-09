@@ -15,7 +15,7 @@ namespace Dermotbg.WebServer
     {
       public string Verb { get; set; }
       public string Path { get; set; }
-      public Func<Dictionary<string, string>, string> Action { get; set; }
+      public Func<Dictionary<string, object>, string> Action { get; set; }
     }
     public class ExtensionInfo
     {
@@ -132,10 +132,32 @@ namespace Dermotbg.WebServer
       }
       ExtensionInfo extInfo;
       ResponsePacket ret = null;
+      verb = verb.ToLower();
       if(extFolderMap.TryGetValue(ext, out extInfo))
       {
         string fullPath = Path.Combine(WebsitePath, path);
         ret = extInfo.Loader(fullPath, ext, extInfo);
+        Route route = routes.SingleOrDefault(route => verb == route.Verb.ToLower() && path == route.Path);
+        if (route != null)
+        {
+          // if route does not return null, it's confirmed there is a handler for this route
+          string redirect = route.Action(kvParams);
+          if (String.IsNullOrEmpty(redirect))
+          {
+            //if there is no redirect we can respond with the default loader
+            ret = extInfo.Loader(fullPath, ext, extInfo);
+          }
+          else
+          {
+            // else honor the redirect
+            ret = new ResponsePacket() { Redirect = redirect };
+          }
+        }
+        else
+        {
+          // If route is null then attempt default behaviour
+          ret = extInfo.Loader(fullPath, ext, extInfo);
+        }
       }
       else{
         ret = new ResponsePacket() { Error = Server.ServerError.UnknownType };
