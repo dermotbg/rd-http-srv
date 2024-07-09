@@ -71,7 +71,7 @@ namespace Dermotbg.WebServer
     // await connections
     private async void StartConnectionListener(HttpListener listener)
     {
-      Router.ResponsePacket resp;
+      ResponsePacket resp;
 
       // await for connection. Return to caller while waiting
       HttpListenerContext context = await listener.GetContextAsync();
@@ -103,10 +103,10 @@ namespace Dermotbg.WebServer
       {
         Console.WriteLine(ex.Message);
         Console.WriteLine(ex.StackTrace);
-        resp = new Router.ResponsePacket() { Redirect = OnError(ServerError.ServerError) };
+        resp = new ResponsePacket() { Redirect = OnError(ServerError.ServerError) };
       }
     }
-    private static void Respond(HttpListenerRequest request, HttpListenerResponse response, Router.ResponsePacket resp)
+    private static void Respond(HttpListenerRequest request, HttpListenerResponse response, ResponsePacket resp)
     {
       if (String.IsNullOrEmpty(resp.Redirect))
       {

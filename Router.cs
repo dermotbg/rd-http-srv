@@ -3,15 +3,7 @@ using Dermotbg.Helpers;
 
 namespace Dermotbg.WebServer
 {
-  public class Router
-  {
-    public const string POST = "post";
-    public const string GET = "get";
-    public const string PUT = "put";
-    public const string DELETE = "delete";
-    public string WebsitePath { get; set; } = null!;
-    private Dictionary<string, ExtensionInfo> extFolderMap;
-    public class ResponsePacket
+   public class ResponsePacket
     {
       public string Redirect { get; set; }
       public byte[] Data { get; set; }      
@@ -19,11 +11,27 @@ namespace Dermotbg.WebServer
       public Encoding Encoding { get; set; }
       public Server.ServerError Error { get; set; }
     }
-    internal class ExtensionInfo
+    public class Route 
+    {
+      public string Verb { get; set; }
+      public string Path { get; set; }
+      public Func<Dictionary<string, string>, string> Action { get; set; }
+    }
+    public class ExtensionInfo
     {
       public string ContentType { get; set; } = null!;
       public Func<string, string, ExtensionInfo, ResponsePacket> Loader { get; set; } = null!;
     }
+  public class Router
+  {
+    public const string POST = "post";
+    public const string GET = "get";
+    public const string PUT = "put";
+    public const string DELETE = "delete";
+    public string WebsitePath { get; set; } = null!;
+    protected Dictionary<string, ExtensionInfo> extFolderMap;
+    protected List<Route> routes;
+    
     public Router()
     {
       extFolderMap = new Dictionary<string, ExtensionInfo>()
@@ -38,6 +46,10 @@ namespace Dermotbg.WebServer
         {"js", new ExtensionInfo() {Loader=FileLoader, ContentType="text/javascript"}},
         {"", new ExtensionInfo() {Loader=PageLoader, ContentType="text/html"}},
       };
+    }
+    public void AddRoute (Route route)
+    {
+      routes.Add(route);
     }
     // ImageLoader Reads in an image file and returns a ResponsePacket with the raw data.
     private ResponsePacket ImageLoader (string fullPath, string ext, ExtensionInfo extInfo)
