@@ -43,6 +43,7 @@ namespace Dermotbg.WebServer
     }
     private static int maxSimultaneousConnections = 20;
     private static Semaphore sem = new Semaphore(maxSimultaneousConnections, maxSimultaneousConnections);
+    protected Session.SessionManager sessionManager;
     public void AddRoute (Route route)
     {
       router.AddRoute(route);
@@ -95,6 +96,7 @@ namespace Dermotbg.WebServer
         DictHelpers.GetKeyValues(data, kvParams);
         Log(kvParams);
         
+        Session session = sessionManager.GetSession(context.Request.RemoteEndPoint);
         resp = router.Route(verb, path, kvParams);
 
         if(resp.Error != ServerError.OK)
@@ -103,6 +105,7 @@ namespace Dermotbg.WebServer
           resp.Redirect = OnError(resp.Error);
           // resp = router.Route("get", OnError(resp.Error), null);
         }
+        session.UpdateLastConnectionTime();
         Respond(context.Request, context.Response, resp);
       }
       catch (Exception ex)

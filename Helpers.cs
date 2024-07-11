@@ -123,6 +123,16 @@ public static class DictHelpers
       Console.WriteLine($"{kvp.Key}: {kvp.Value}");
     }
   }
+  public static U CreateOrGet<T,U>(this Dictionary<T,U> dict, T key) where U : class, new()
+  {
+    U item = null;
+    if(!dict.TryGetValue(key, out item))
+    {
+      item = new U();
+      dict[key] = item;
+    }
+    return item;
+  }
 }
 
 public static class ExtensionMethods
