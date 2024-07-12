@@ -96,7 +96,7 @@ namespace Dermotbg.WebServer
         DictHelpers.GetKeyValues(data, kvParams);
         Log(kvParams);
         
-        Session session = sessionManager.GetSession(context.Request.RemoteEndPoint);
+        // Session session = sessionManager.GetSession(context.Request.RemoteEndPoint);
         resp = router.Route(verb, path, kvParams);
 
         if(resp.Error != ServerError.OK)
@@ -105,7 +105,7 @@ namespace Dermotbg.WebServer
           resp.Redirect = OnError(resp.Error);
           // resp = router.Route("get", OnError(resp.Error), null);
         }
-        session.UpdateLastConnectionTime();
+        // session.UpdateLastConnectionTime();
         Respond(context.Request, context.Response, resp);
       }
       catch (Exception ex)
